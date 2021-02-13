@@ -182,21 +182,39 @@ echo "RTL_433 Frequency Offset =" $OFFSET
 
 #set -x  ## uncomment for MQTT logging...
 
-/usr/local/bin/rtl_433 -F json -R $PROTOCOL -f $FREQUENCY -g $GAIN -p $OFFSET | while read line
+PROTOCOL="-R 19 -R 62"	# Hardcode as we want multiple protocols 
+/usr/local/bin/rtl_433 -F json $PROTOCOL | while read line
 do
-  DEVICE="$(echo $line | jq --raw-output '.model' | tr -s ' ' '_')" # replace ' ' with '_'
-  DEVICEID="$(echo $line | jq --raw-output '.id' | tr -s ' ' '_')"
+	# We don't know from the output which protocol number was received
+	# However we can extract the device name from json output
+	DEVICE="$(echo $line | jq --raw-output '.model')"
+	
+	if [ "$DEVICE" = "Elro-DB286A" ]; then
+	  MQTT_TOPIC="homeassistant/sensor/doorbell"
+	fi
+	if [ "$DEVICE" = "Nexus-TH" ]; then
+	  MQTT_TOPIC="homeassistant/sensor/outdoortemphum"
+	fi
 
-  MQTT_PATH=$MQTT_TOPIC
-
-  if [ ${#DEVICE} > 0 ]; then
-    MQTT_PATH=$MQTT_PATH/"$DEVICE"
-  fi
-  if [ ${#DEVICEID} > 0 ]; then
-    MQTT_PATH=$MQTT_PATH/"$DEVICEID"
-  fi
-
-  # Create file with touch /tmp/rtl_433.log if logging is needed
-  [ -w /tmp/rtl_433.log ] && echo $line >> rtl_433.log
-  echo $line | /usr/bin/mosquitto_pub -h $MQTT_HOST -u $MQTT_USER -P $MQTT_PASS -i RTL_433 -r -l -t $MQTT_PATH
+	# Publish the json to the appropriate topic
+	echo $line | /usr/bin/mosquitto_pub -h $MQTT_HOST -u $MQTT_USER -P $MQTT_PASS -i RTL_433 -r -l -t $MQTT_TOPIC
 done
+
+#/usr/local/bin/rtl_433 -F json -R $PROTOCOL -f $FREQUENCY -g $GAIN -p $OFFSET | while read line
+#do
+#  DEVICE="$(echo $line | jq --raw-output '.model' | tr -s ' ' '_')" # replace ' ' with '_'
+#  DEVICEID="$(echo $line | jq --raw-output '.id' | tr -s ' ' '_')"
+#
+#  MQTT_PATH=$MQTT_TOPIC
+#
+#  if [ ${#DEVICE} > 0 ]; then
+#    MQTT_PATH=$MQTT_PATH/"$DEVICE"
+#  fi
+#  if [ ${#DEVICEID} > 0 ]; then
+#    MQTT_PATH=$MQTT_PATH/"$DEVICEID"
+#  fi
+#
+#  # Create file with touch /tmp/rtl_433.log if logging is needed
+#  [ -w /tmp/rtl_433.log ] && echo $line >> rtl_433.log
+#  echo $line | /usr/bin/mosquitto_pub -h $MQTT_HOST -u $MQTT_USER -P $MQTT_PASS -i RTL_433 -r -l -t $MQTT_PATH
+#done
