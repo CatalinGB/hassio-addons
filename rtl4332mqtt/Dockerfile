@@ -6,7 +6,8 @@
 # IMPORTANT: The container needs privileged access to /dev/bus/usb on the host.
 
 ARG BUILD_FROM
-FROM $BUILD_FROM
+#FROM $BUILD_FROM
+FROM ghcr.io/hassio-addons/base/armhf:139cea1
 
 ENV LANG C.UTF-8
 
