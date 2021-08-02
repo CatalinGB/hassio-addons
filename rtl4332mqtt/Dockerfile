@@ -7,7 +7,7 @@
 
 ARG BUILD_FROM
 #FROM $BUILD_FROM
-FROM ghcr.io/hassio-addons/base/armhf:139cea1
+FROM ghcr.io/hassio-addons/base/amd64
 
 ENV LANG C.UTF-8
 
