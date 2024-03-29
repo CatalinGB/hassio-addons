@@ -21,7 +21,7 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
   
-  image: '../rtl4332mqtt/Dockerfile'
+  image: './rtl4332mqtt/Dockerfile'
 
 jobs:
   build:
